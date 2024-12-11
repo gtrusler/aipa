@@ -10,6 +10,7 @@ A modern, production-ready boilerplate for SAAS applications built with Next.js 
 - 🛡️ Protected routes
 - 🌤️ Weather & Air Quality Data
 - 📰 News Integration
+- 🧠 Context-Aware AI
 - 🎨 Tailwind CSS for styling
 - 📝 TypeScript for type safety
 - 🧪 ESLint + Prettier for code quality
@@ -120,6 +121,82 @@ Available news categories:
 - `travel`: Travel news
 - `tech`: Technology news
 - `opinion`: Opinion pieces
+
+### Context-Aware AI
+
+The application features a sophisticated context management system that enhances AI interactions by providing relevant environmental and situational data:
+
+- Real-time contextual information:
+  - Current time and timezone
+  - Local weather conditions
+  - Air quality and pollen levels
+  - Latest news headlines
+  - User preferences and history
+
+- Smart context generation:
+  - Automatic context assembly
+  - Priority-based information ordering
+  - Configurable context depth
+  - Efficient caching of context data
+
+Example usage:
+
+```typescript
+import { ContextManager } from '@/lib/context/manager'
+
+// Initialize context manager with location
+const contextManager = new ContextManager({
+  latitude: 30.2672,
+  longitude: -97.7431,
+  timezone: 'America/Chicago'
+})
+
+// Get full context for LLM
+const context = await contextManager.getContextForLLM()
+
+// Get specific context components
+const weatherContext = await contextManager.getWeatherContext()
+const newsContext = await contextManager.getNewsContext({
+  categories: ['austin', 'latest'],
+  includeSummaries: true,
+  storiesPerCategory: 3
+})
+```
+
+Sample context output:
+```
+Current time: 4:23 PM
+Current weather conditions:
+  Temperature: 75°F
+  Conditions: Partly Cloudy
+  Wind Speed: 8 mph
+
+Current air quality:
+  AQI: 42 (Good)
+  Main Pollutant: PM2.5
+
+Pollen information:
+  Tree Pollen: Low
+  Grass Pollen: Moderate
+  Weed Pollen: Low
+
+Top Stories:
+AUSTIN NEWS:
+1. Autonomous drones to patrol SH 130
+   Time: 23h ago
+   Summary: Soon, autonomous drones will provide around-the-clock security...
+
+LATEST NEWS:
+1. Major policy change announced
+   Time: 2h ago
+   Summary: The administration unveiled new guidelines...
+```
+
+The context manager automatically:
+- Refreshes stale data
+- Handles API rate limits
+- Provides fallback data when services are unavailable
+- Formats information for optimal LLM comprehension
 
 ## Prerequisites
 
