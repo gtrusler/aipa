@@ -1,0 +1,11 @@
+langchain==0.3.11
+langchain-experimental==0.3.3
+langchain-core==0.3.24
+langchain-openai==0.2.12
+langchain-community==0.3.11
+langchain-anthropic==0.3.0
+langchain-google-genai==2.0.6
+langgraph==0.2.58
+openai==1.57.2
+anthropic==0.40.0
+duckduckgo-search>=4.5
