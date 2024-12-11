@@ -6,6 +6,7 @@ import json
 from ..weather.client import WeatherClient
 from ..weather.allergy import AllergyClient
 from ..news import NewsClient
+from ..ai.perplexity import PerplexityClient, PerplexityConfig
 
 @dataclass
 class Location:
@@ -18,10 +19,12 @@ class Location:
 
 class ContextManager:
     def __init__(self, location: Location):
+        """Initialize the context manager with a location."""
         self._location = location
-        self.weather_client = WeatherClient()
-        self.allergy_client = AllergyClient()
-        self.news_client = NewsClient()
+        self._weather_client = WeatherClient()
+        self._allergy_client = AllergyClient()
+        self._news_client = NewsClient()
+        self._perplexity_client = PerplexityClient()
         
     @property
     def location(self) -> Optional[Location]:
@@ -43,7 +46,7 @@ class ContextManager:
             return None
             
         try:
-            return await self.weather_client.get_realtime(
+            return await self._weather_client.get_realtime(
                 (self._location.latitude, self._location.longitude)
             )
         except Exception as e:
@@ -52,7 +55,7 @@ class ContextManager:
     
     async def _get_air_quality_context(self, location: Tuple[float, float]) -> str:
         """Get air quality context for the given location."""
-        data = await self.allergy_client.get_air_quality(location[0], location[1])
+        data = await self._allergy_client.get_air_quality(location[0], location[1])
         if not data:
             return "Air quality data is currently unavailable."
 
@@ -85,7 +88,7 @@ class ContextManager:
 
     async def _get_pollen_context(self, location: Tuple[float, float]) -> str:
         """Get pollen forecast context for the given location."""
-        data = await self.allergy_client.get_pollen_forecast(location[0], location[1], days=1)
+        data = await self._allergy_client.get_pollen_forecast(location[0], location[1], days=1)
         if not data or not data.get('dailyInfo'):
             return "Pollen forecast is currently unavailable."
 
@@ -136,7 +139,7 @@ class ContextManager:
             categories = ['latest', 'us', 'world']  # Default categories
         
         try:
-            news_data = await self.news_client.get_multiple_categories(
+            news_data = await self._news_client.get_multiple_categories(
                 categories=categories,
                 limit_per_category=stories_per_category
             )
@@ -169,13 +172,38 @@ class ContextManager:
             print(f"Error getting news context: {e}")
             return "News data is currently unavailable."
 
-    async def get_context_for_llm(self, include_news_summaries: bool = True) -> str:
+    async def _get_web_search_context(self, query: str) -> str:
+        """Get relevant web search results for the query."""
+        try:
+            config = PerplexityConfig(
+                temperature=0.1,  # More focused results
+                search_recency_filter="day",  # Recent information
+                return_related_questions=False
+            )
+            
+            result = await self._perplexity_client.search(
+                query,
+                system_prompt="Provide a concise summary of the most relevant and recent information. Focus on factual data.",
+                config=config
+            )
+            
+            if result and result.get('choices'):
+                return f"\nWeb Search Results:\n{result['choices'][0]['message']['content']}"
+            return ""
+            
+        except Exception as e:
+            print(f"Error fetching web search results: {e}")
+            return ""
+
+    async def get_context_for_llm(self, query: str = "", include_news_summaries: bool = True, include_web_search: bool = True) -> str:
         """
         Generate a context string for the LLM that includes current time,
-        weather, air quality, pollen, and news information.
+        weather, air quality, pollen, news, and relevant web search results.
         
         Args:
+            query: The user's query to get relevant web search results
             include_news_summaries: Whether to include article summaries in news context
+            include_web_search: Whether to include web search results
         """
         context_parts = []
         
@@ -207,7 +235,7 @@ class ContextManager:
                 context_parts.append("\nPollen information:")
                 context_parts.append(pollen_context)
         
-        # Add news information with default categories and 3 stories each
+        # Add news information
         news_context = await self._get_news_context(
             categories=['austin', 'latest', 'us', 'world'],
             include_summaries=include_news_summaries,
@@ -216,6 +244,12 @@ class ContextManager:
         if news_context:
             context_parts.append("\nTop Stories:")
             context_parts.append(news_context)
+        
+        # Add web search results if query is provided
+        if include_web_search and query:
+            web_context = await self._get_web_search_context(query)
+            if web_context:
+                context_parts.append(web_context)
         
         return "\n".join(context_parts)
 
