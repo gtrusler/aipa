@@ -8,6 +8,8 @@ A modern, production-ready boilerplate for SAAS applications built with Next.js 
 - 🔐 Authentication with Supabase Auth
 - 👤 User profile management
 - 🛡️ Protected routes
+- 🌤️ Weather & Air Quality Data
+- 📰 News Integration
 - 🎨 Tailwind CSS for styling
 - 📝 TypeScript for type safety
 - 🧪 ESLint + Prettier for code quality
@@ -52,6 +54,73 @@ The project uses a custom theme configuration that includes both light and dark 
 
 Dark mode is supported out of the box using the `class` strategy. To toggle between light and dark mode, you can use the `useTheme` hook from `next-themes`.
 
+### Weather Features
+
+The application includes comprehensive weather and environmental data:
+
+- Current weather conditions
+- Air quality index and pollutants
+- Pollen levels and allergy information
+- Caching for optimal performance
+- Error handling and fallback mechanisms
+
+Example usage:
+
+```typescript
+import { WeatherClient } from '@/lib/weather/client'
+import { AllergyClient } from '@/lib/weather/allergy'
+
+// Get weather data
+const weatherClient = new WeatherClient()
+const conditions = await weatherClient.getCurrentConditions(location)
+
+// Get air quality and pollen data
+const allergyClient = new AllergyClient()
+const airQuality = await allergyClient.getAirQuality(location)
+const pollenLevels = await allergyClient.getPollenData(location)
+```
+
+### News Integration
+
+The application fetches and displays news from multiple sources:
+
+- Local Austin news from Fox 7
+- National news from Fox News
+- Customizable news categories
+- Article summaries
+- Relative timestamps
+- Caching with TTL
+
+Example usage:
+
+```typescript
+import { NewsClient } from '@/lib/news/client'
+
+const newsClient = new NewsClient()
+
+// Get news for specific category
+const articles = await newsClient.getNews('austin', 3)
+
+// Get news from multiple categories
+const allNews = await newsClient.getMultipleCategories({
+  categories: ['austin', 'latest', 'us', 'world'],
+  limitPerCategory: 3
+})
+```
+
+Available news categories:
+- `austin`: Local Austin news
+- `latest`: Breaking news
+- `us`: National news
+- `world`: International news
+- `politics`: Political news
+- `science`: Science and technology
+- `health`: Health news
+- `sports`: Sports news
+- `travel`: Travel news
+- `tech`: Technology news
+- `opinion`: Opinion pieces
+
 ## Prerequisites
 
 - Node.js 18.17 or later
@@ -79,6 +148,17 @@ AI_RATE_LIMIT_REQUESTS=100
 AI_RATE_LIMIT_WINDOW_MS=60000
 AI_MAX_TOKENS_PER_REQUEST=2000
 
+# Weather & Air Quality
+TOMORROW_API_KEY=your_tomorrow_api_key
+BREEZOMETER_API_KEY=your_breezometer_key
+WEATHER_CACHE_TTL=300
+ALLERGY_CACHE_TTL=300
+
+# News Configuration
+NEWS_CACHE_TTL=300
+NEWS_ARTICLES_PER_CATEGORY=3
+DEFAULT_NEWS_CATEGORIES=austin,latest,us,world
+
 # Cloudflare R2
 R2_ACCOUNT_ID=your_account_id
 R2_ACCESS_KEY_ID=your_access_key
@@ -101,12 +181,17 @@ REDIS_URL=your_redis_url
 │   ├── lib/               # Library code
 │   │   ├── supabase/     # Supabase client and utilities
 │   │   ├── ai/           # AI integration utilities
-│   │   └── storage/      # R2 storage utilities
+│   │   ├── storage/      # R2 storage utilities
+│   │   ├── weather/      # Weather and air quality services
+│   │   ├── news/         # News feed integration
+│   │   ├── context/      # Context management for LLM
+│   │   └── utils/        # Common utilities and helpers
 │   ├── hooks/            # Custom React hooks
 │   ├── utils/            # Utility functions
 │   ├── types/            # TypeScript type definitions
 │   └── styles/           # CSS styles
 ├── public/               # Static files
+├── scripts/             # Test and utility scripts
 └── tests/               # Test files
 ```
 
