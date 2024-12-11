@@ -5,6 +5,7 @@ export interface AIConfig {
   maxTokens: number
   temperature: number
   topP: number
+  systemPrompt?: string
 }
 
 export interface AIUsage {
@@ -23,4 +24,4 @@ export type AIError =
   | 'RATE_LIMIT_EXCEEDED'
   | 'TOKEN_LIMIT_EXCEEDED'
   | 'INVALID_REQUEST'
-  | 'SERVICE_UNAVAILABLE' 
+  | 'SERVICE_UNAVAILABLE'
